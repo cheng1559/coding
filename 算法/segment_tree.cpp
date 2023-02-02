@@ -6,7 +6,7 @@ using vll = std::vector<ll>;
 using pii = std::pair<int, int>;
 
 template<typename T>
-class SegmentTree {
+class segment_tree {
 private:
 	struct unit {
 		T val = 0, lazy = 0;
@@ -92,11 +92,11 @@ public:
 		up(rt);
 	}
 
-	SegmentTree(std::vector<T> &_a):a(_a) {
+	segment_tree(std::vector<T> &_a):a(_a) {
 		size = a.size() - 1;
 		d.resize(size << 2);
 		build(1, size);
 	}
 };
 
-using sg = SegmentTree<int>;
+using sg = segment_tree<int>;

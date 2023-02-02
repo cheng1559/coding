@@ -1,12 +1,10 @@
-#include <iostream>
-#include <vector>
+#include <bits/stdc++.h>
 
-using namespace std;
-using vi = vector<int>;
-using vvi = vector<vector<int> >;
 using ll = long long;
-using vll = vector<ll>;
-using vvll = vector<vector<ll> >;
+using vi = std::vector<int>;
+using vvi = std::vector<vi>;
+using vll = std::vector<ll>;
+using vvll = std::vector<vll>;
 
 const ll M = 123456789;
 
@@ -20,11 +18,11 @@ struct matrix {
 	
 	matrix(int y, int x): size_x(x), size_y(y) {m.resize(size_y, vll(size_x, 0));}
 	
-	inline ll at(int i, int j) const {return m[i][j];}
-	inline void set(int i, int j, ll t) {m[i][j] = t;}
+	inline ll at(int i, int j) const { return m[i][j]; }
+	inline void set(int i, int j, ll t) { m[i][j] = t; }
 	
 	matrix operator*(const matrix &b) const {
-		if (this->size_x != b.size_y) {cout << "error" << endl; return {};}
+		if (this->size_x != b.size_y) {std::cout << "error\n"; return {};}
 		int x = b.size_x;
 		int y = this->size_y;
 		matrix tmp(y, x);
@@ -39,7 +37,7 @@ struct matrix {
 	}
 	
 	matrix operator^(ll n) const {
-		if (this->size_y != this->size_x) {cout << "error" << endl; return {};}
+		if (this->size_y != this->size_x) {std::cout << "error\n"; return {};}
 		matrix ans(this->size_y, this->size_x);
 		for (int j = 0; j < size_y; j ++) ans.set(j, j, 1);
 		matrix a(*this);
@@ -53,9 +51,9 @@ struct matrix {
 	void print() {
 		for (int i = 0; i < size_y; i ++) {
 			for (int j = 0; j < size_x; j ++) {
-				cout << at(i, j) << " ";
+				std::cout << at(i, j) << " ";
 			}
-			cout << endl;
+			std::cout << "\n";
 		}
 	}
 };
