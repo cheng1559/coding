@@ -90,3 +90,35 @@ public:
 		build(1, n);
 	}
 };
+
+using ll = long long;
+using vi = std::vector<int>;
+using vll = std::vector<ll>;
+using pii = std::pair<int, int>;
+
+void solve() {
+	int n, m, q;
+	std::cin >> n >> m >> q;
+	vll a(n + 1, 1);
+	ST<ll> st(a);
+	while (m --) {
+		int l, r, x;
+		std::cin >> l >> r >> x;
+		st.update(l, r, x, 1);
+	}
+	while (q --) {
+		int l, r;
+		std::cin >> l >> r;
+		std::cout << st.query(l, r, 1) << "\n";
+	}
+}
+
+int main() {
+	std::cin.tie(0), std::cout.tie(0);
+	std::ios::sync_with_stdio(false);
+	int t;
+	std::cin >> t;
+	while (t --) {
+		solve();
+	}
+}

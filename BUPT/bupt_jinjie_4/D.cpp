@@ -2,7 +2,7 @@
 
 template<typename T>
 class ST {
-private:
+public:
 	struct node {
 		T val = 0, lazy = 0;
 		int l, r;
@@ -42,7 +42,6 @@ private:
 		up(rt);
 	}
 	
-public:
 	T query(int L, int R, int rt) {
 		node &t = d[rt];
 		int l = t.l, r = t.r;
@@ -54,19 +53,6 @@ public:
 		if (L <= mid) ans += query(L, R, rt << 1);
 		if (R > mid) ans += query(L, R, rt << 1 | 1);
 		return ans;
-	}
-	
-	void update(int n, T val, int rt=1) {
-		node &t = d[rt];
-		int l = t.l, r = t.r;
-		if (l == r) {
-			t.val += val;
-			return;
-		}
-		int mid = l + r >> 1;
-		if (n <= mid) update(n, val, rt << 1);
-		else update(n, val, rt << 1 | 1);
-		up(rt);
 	}
 	
 	void update(int L, int R, T val, int rt) {
@@ -84,9 +70,36 @@ public:
 		up(rt);
 	}
 
-	ST(std::vector<T> &_a):a(_a) {
+	ST(std::vector<T> &_a): a(_a) {
 		n = a.size() - 1;
 		d.resize(n << 2);
 		build(1, n);
 	}
 };
+
+
+using ll = long long;
+using vi = std::vector<int>;
+using vll = std::vector<ll>;
+using pii = std::pair<int, int>;
+
+int main() {
+	std::cin.tie(0), std::cout.tie(0);
+	std::ios::sync_with_stdio(false);
+	int n;
+	while (std::cin >> n, n) {
+		vi a(n + 1);
+		ST st(a);
+		for (int i = 0; i < n; i ++) {
+			int x, y;
+			std::cin >> x >> y;
+			st.update(x, y, 1, 1);
+		}
+		for (int i = 1; i <= n; i ++) {
+			std::cout << st.query(i, i, 1) << " ";
+		}
+		std::cout << "\n";
+		
+		
+	}
+}

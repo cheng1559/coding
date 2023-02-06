@@ -6,7 +6,7 @@ using vll = std::vector<ll>;
 using pii = std::pair<int, int>;
 
 
-class disjoint_set {
+class DSU {
 public:
 	vi uset, rank;
 	int find(int x) {
@@ -21,11 +21,9 @@ public:
 			if (rank[x] == rank[y]) rank[y] ++;
 		}
 	}
-	disjoint_set(int n) {
+	DSU(int n) {
 		uset.resize(n);
 		rank.resize(n);
 		for (int i = 0; i < n; i ++) uset[i] = i;
 	}
 };
-
-using dsu = disjoint_set;
