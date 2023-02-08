@@ -1,93 +1,119 @@
 #include <bits/stdc++.h>
-using namespace std;
-
-using ll = long long;
-using vi = vector<int>;
-using vll = vector<ll>;
-using pii = pair<int, int>;
 
 template<typename T>
-class SegmentTree {
+class ST {
 private:
-	struct unit {
-		T val = 0;
-		T lazy = 0;
-		int left;
-		int right;
+	struct node {
+		T val = 0, lazy = 0;
+		int l, r;
 	};
-	vector<unit> data;
-	vector<T> a;
+	std::vector<node> tree;
 	
-	size_t size;
-	
-	inline void up(int root) {
-		data[root].val = max(data[root << 1].val, data[root << 1 | 1].val);
+	inline void push_up(int rt) {
+		tree[rt].val = std::max(tree[rt << 1].val, tree[rt << 1 | 1].val);
 	}
 	
-	void build(int left, int right, int root=1) {
-		unit &t = data[root];
-		t.left = left, t.right = right;
-		if (left == right) {
-			t.val = a[left];
+	inline void push_down(int rt) {
+		int llen = tree[rt << 1].r - tree[rt << 1].l + 1;
+		int rlen = tree[rt << 1 | 1].r - tree[rt << 1 | 1].l + 1;
+		if (tree[rt].lazy) {
+			tree[rt << 1].lazy += tree[rt].lazy;
+			tree[rt << 1 | 1].lazy += tree[rt].lazy;
+			tree[rt << 1].val += tree[rt].lazy * llen;
+			tree[rt << 1 | 1].val += tree[rt].lazy * rlen;
+			tree[rt].lazy = 0;
+		}
+	}
+	
+	void build(int l, int r, int rt, std::vector<T> &a) {
+		tree[rt].l = l, tree[rt].r = r;
+		if (l == r) {
+			tree[rt].val = a[l];
 			return;
 		}
-		int mid = left + right >> 1;
-		build(left, mid, root << 1);
-		build(mid + 1, right, root << 1 | 1);
-		up(root);
+		int mid = l + r >> 1;
+		build(l, mid, rt << 1, a);
+		build(mid + 1, r, rt << 1 | 1, a);
+		push_up(rt);
 	}
 	
 public:
-	T query(int Left, int Right, int root=1) {
-		unit &t = data[root];
-		int left = t.left, right = t.right;
-		if (Left <= left && Right >= right) return t.val;
-		if (Left > right || Right < left) return 0;
-		int mid = left + right >> 1;
-		T ans = 0;
-		if (Left <= mid) ans = max(ans, query(Left, Right, root << 1));
-		if (Right > mid) ans = max(ans, query(Left, Right, root << 1 | 1));
-		return ans;
+	T query(int k, int rt) {
+		int l = tree[rt].l, r = tree[rt].r;
+		if (l == r) {
+			return tree[rt].val;
+		}
+		int mid = l + r >> 1;
+		push_down(rt);
+		if (mid >= k) {
+			return query(k, rt << 1);
+		}
+		return query(k, rt << 1 | 1);
 	}
 	
-	void update(int node, T val, int root=1) {
-		unit &t = data[root];
-		int left = t.left, right = t.right;
-		if (left == right) {
-			t.val = val;
+	T range_query(int L, int R, int rt) {
+		int l = tree[rt].l, r = tree[rt].r;
+		if (L <= l && R >= r) {
+			return tree[rt].val;
+		}
+		if (L > r || R < l) {
+			return 0;
+		}
+		push_down(rt);
+		return std::max(range_query(L, R, rt << 1), range_query(L, R, rt << 1 | 1));
+	}
+	
+	void update(int k, T val, int rt) {
+		int l = tree[rt].l, r = tree[rt].r;
+		if (l == r) {
+			tree[rt].val = val;
 			return;
 		}
-		int mid = left + right >> 1;
-		if (node <= mid) update(node, val, root << 1);
-		else update(node, val, root << 1 | 1);
-		up(root);
+		int mid = l + r >> 1;
+		if (mid >= k) update(k, val, rt << 1);
+		else update(k, val, rt << 1 | 1);
+		push_up(rt);
+	}
+	
+	void range_update(int L, int R, T val, int rt) {
+		int l = tree[rt].l, r = tree[rt].r;
+		if (L <= l && R >= r) {
+			int len = r - l + 1;
+			tree[rt].val += val * len;
+			tree[rt].lazy += val;
+			return;
+		}
+		int mid = l + r >> 1;
+		push_down(rt);
+		if (mid >= L) range_update(L, R, val, rt << 1);
+		if (mid < R) range_update(L, R, val, rt << 1 | 1);
+		push_up(rt);
 	}
 
-	SegmentTree(vector<T> &_a):a(_a) {
-		size = a.size() - 1;
-		data.resize(size << 2);
-		build(1, size);
+	ST(std::vector<T> &a) {
+		int n = a.size() - 1;
+		tree.resize(n << 2);
+		build(1, n, 1, a);
 	}
 };
 
-using sg = SegmentTree<int>;
-
+using vi = std::vector<int>;
 
 int main() {
-	cin.tie(0);
-	cout.tie(0);
-	ios::sync_with_stdio(false);
+	std::cin.tie(0);
+	std::cout.tie(0);
+	std::ios::sync_with_stdio(false);
 	int n, m;
-	while (cin >> n >> m) {
+	while (std::cin >> n >> m) {
 		vi a(n + 1);
-		for (int i = 1; i <= n; i ++) cin >> a[i];
-		sg t(a);
+		for (int i = 1; i <= n; i ++) std::cin >> a[i];
+		ST<int> st(a);
 		while (m --) {
 			char c;
 			int a, b;
-			cin >> c >> a >> b;
-			if (c == 'Q') cout << t.query(a, b) << "\n";
-			else t.update(a, b);
+			std::cin >> c >> a >> b;
+			if (c == 'Q') std::cout << st.range_query(a, b, 1) << "\n";
+			else st.update(a, b, 1);
 		}
 	}
 }

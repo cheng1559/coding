@@ -7,86 +7,92 @@ private:
 		T val = 0, lazy = 0;
 		int l, r;
 	};
-	std::vector<node> d;
-	std::vector<T> a;
-	int n;
+	std::vector<node> tree;
 	
-	inline void up(int rt) {
-		d[rt].val = d[rt << 1].val + d[rt << 1 | 1].val;
+	inline void push_up(int rt) {
+		tree[rt].val = tree[rt << 1].val + tree[rt << 1 | 1].val;
 	}
 	
-	inline void down(int rt) {
-		node &t = d[rt];
-		node &lc = d[rt << 1], &rc = d[rt << 1 | 1];
-		int llen = lc.r - lc.l + 1;
-		int rlen = rc.r - rc.l + 1;
-		if (t.lazy) {
-			lc.lazy += t.lazy;
-			rc.lazy += t.lazy;
-			lc.val += t.lazy * llen;
-			rc.val += t.lazy * rlen;
-			t.lazy = 0;
+	inline void push_down(int rt) {
+		int llen = tree[rt << 1].r - tree[rt << 1].l + 1;
+		int rlen = tree[rt << 1 | 1].r - tree[rt << 1 | 1].l + 1;
+		if (tree[rt].lazy) {
+			tree[rt << 1].lazy += tree[rt].lazy;
+			tree[rt << 1 | 1].lazy += tree[rt].lazy;
+			tree[rt << 1].val += tree[rt].lazy * llen;
+			tree[rt << 1 | 1].val += tree[rt].lazy * rlen;
+			tree[rt].lazy = 0;
 		}
 	}
 	
-	void build(int l, int r, int rt=1) {
-		node &t = d[rt];
-		t.l = l, t.r = r;
+	void build(int l, int r, int rt, std::vector<T> &a) {
+		tree[rt].l = l, tree[rt].r = r;
 		if (l == r) {
-			t.val = a[l];
+			tree[rt].val = a[l];
 			return;
 		}
 		int mid = l + r >> 1;
-		build(l, mid, rt << 1);
-		build(mid + 1, r, rt << 1 | 1);
-		up(rt);
+		build(l, mid, rt << 1, a);
+		build(mid + 1, r, rt << 1 | 1, a);
+		push_up(rt);
 	}
 	
 public:
-	T query(int L, int R, int rt) {
-		node &t = d[rt];
-		int l = t.l, r = t.r;
-		if (L <= l && R >= r) return t.val;
-		if (L > r || R < l) return 0;
-		int mid = l + r >> 1;
-		down(rt);
-		T ans = 0;
-		if (L <= mid) ans += query(L, R, rt << 1);
-		if (R > mid) ans += query(L, R, rt << 1 | 1);
-		return ans;
-	}
-	
-	void update(int n, T val, int rt=1) {
-		node &t = d[rt];
-		int l = t.l, r = t.r;
+	T query(int k, int rt=1) {
+		int l = tree[rt].l, r = tree[rt].r;
 		if (l == r) {
-			t.val += val;
-			return;
+			return tree[rt].val;
 		}
 		int mid = l + r >> 1;
-		if (n <= mid) update(n, val, rt << 1);
-		else update(n, val, rt << 1 | 1);
-		up(rt);
+		push_down(rt);
+		if (mid >= k) {
+			return query(k, rt << 1);
+		}
+		return query(k, rt << 1 | 1);
 	}
 	
-	void update(int L, int R, T val, int rt) {
-		node &t = d[rt];
-		int l = t.l, r = t.r;
+	T range_query(int L, int R, int rt=1) {
+		int l = tree[rt].l, r = tree[rt].r;
 		if (L <= l && R >= r) {
-			t.val += val * (r - l + 1);
-			t.lazy += val;
+			return tree[rt].val;
+		}
+		if (L > r || R < l) {
+			return 0;
+		}
+		push_down(rt);
+		return range_query(L, R, rt << 1) + range_query(L, R, rt << 1 | 1);
+	}
+	
+	void update(int k, T val, int rt=1) {
+		int l = tree[rt].l, r = tree[rt].r;
+		if (l == r) {
+			tree[rt].val = val;
 			return;
 		}
 		int mid = l + r >> 1;
-		down(rt);
-		if (L <= mid) update(L, R, val, rt << 1);
-		if (R > mid) update(L, R, val, rt << 1 | 1);
-		up(rt);
+		if (mid >= k) update(k, val, rt << 1);
+		else update(k, val, rt << 1 | 1);
+		push_up(rt);
+	}
+	
+	void range_update(int L, int R, T val, int rt=1) {
+		int l = tree[rt].l, r = tree[rt].r;
+		if (L <= l && R >= r) {
+			int len = r - l + 1;
+			tree[rt].val += val * len;
+			tree[rt].lazy += val;
+			return;
+		}
+		int mid = l + r >> 1;
+		push_down(rt);
+		if (mid >= L) range_update(L, R, val, rt << 1);
+		if (mid < R) range_update(L, R, val, rt << 1 | 1);
+		push_up(rt);
 	}
 
-	ST(std::vector<T> &_a):a(_a) {
-		n = a.size() - 1;
-		d.resize(n << 2);
-		build(1, n);
+	ST(std::vector<T> &a) {
+		int n = a.size() - 1;
+		tree.resize(n << 2);
+		build(1, n, 1, a);
 	}
 };
