@@ -1,14 +1,9 @@
 #include <bits/stdc++.h>
 
-using ll = long long;
-using vi = std::vector<int>;
-using vll = std::vector<ll>;
-using pii = std::pair<int, int>;
-
 
 class DSU {
 public:
-	vi uset, rank;
+	std::vector<int> uset, rank;
 	int find(int x) {
 		if (x != uset[x]) uset[x] = find(uset[x]);
 		return uset[x];
