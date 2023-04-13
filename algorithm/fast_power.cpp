@@ -3,7 +3,7 @@
 using namespace std;
 using ll = long long;
 
-const ll M = 1e9 + 7;
+constexpr ll M = 1e9 + 7;
 
 inline ll f_pow(ll a, ll n) {
 	ll ans = 1;

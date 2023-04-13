@@ -1,10 +1,13 @@
 #include <bits/stdc++.h>
 
 using i64 = long long;
+<<<<<<< Updated upstream
 
 void solve() {
 	
 }
+=======
+>>>>>>> Stashed changes
 
 int main() {
 	std::cin.tie(0), std::cout.tie(0);
