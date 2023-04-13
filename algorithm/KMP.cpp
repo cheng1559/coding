@@ -24,10 +24,9 @@ int kmpFind(std::string s, std::string t) {
 	return -1;
 }
 
-std::vector<int> kmpCount(std::string s, std::string t) {
-	int n = s.length(), m = t.length();
+int kmpCount(std::string s, std::string t) {
+	int n = s.length(), m = t.length(), cnt = 0;
 	auto ne = getNext(t);
-    std::vector<int> ans;
 	for (int i = 1, j = 0; i < m; ++i) {
 		while (j > 0 && t[i] != t[j]) { j = ne[j]; }
 		if (t[i] == t[j]) { ++j; }
@@ -37,9 +36,9 @@ std::vector<int> kmpCount(std::string s, std::string t) {
 		while (j > 0 && s[i] != t[j]) { j = ne[j]; }
 		if (s[i] == t[j]) { ++j; }
 		if (j == m) {
-			ans.emplace_back(i - m + 1);
+			++cnt;
 			j = 0;
 		}
 	}
-	return ans;
+	return cnt;
 }
