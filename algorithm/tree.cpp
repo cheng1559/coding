@@ -7,18 +7,21 @@ struct Seg {
 	std::vector<T> val, lazy;
 	std::vector<int> l, r;
 	
+	inline int lc(int rt) { return rt << 1; }
+	inline int rc(int rt) { return rt << 1 | 1; }
+	
 	inline void pushUp(int rt) {
-		val[rt] = val[rt << 1] + val[rt << 1 | 1];
+		val[rt] = val[lc(rt)] + val[rc(rt)];
 	}
 	
 	inline void pushDown(int rt) {
-		int llen = r[rt << 1] - l[rt << 1] + 1;
-		int rlen = r[rt << 1 | 1] - l[rt << 1 | 1] + 1;
+		int llen = r[lc(rt)] - l[lc(rt)] + 1;
+		int rlen = r[rc(rt)] - l[rc(rt)] + 1;
 		if (lazy[rt]) {
-			lazy[rt << 1] += lazy[rt];
-			lazy[rt << 1 | 1] += lazy[rt];
-			val[rt << 1] += lazy[rt] * llen;
-			val[rt << 1 | 1] += lazy[rt] * rlen;
+			lazy[lc(rt)] += lazy[rt];
+			lazy[rc(rt)] += lazy[rt];
+			val[lc(rt)] += lazy[rt] * llen;
+			val[rc(rt)] += lazy[rt] * rlen;
 			lazy[rt] = 0;
 		}
 	}
@@ -29,9 +32,9 @@ struct Seg {
 			val[rt] = a[L];
 			return;
 		}
-		int mid = l[rt] + r[rt] >> 1;
-		build(l, mid, rt << 1, a);
-		build(mid + 1, r, rt << 1 | 1, a);
+		int mid = (l[rt] + r[rt]) >> 1;
+		build(l[rt], mid, lc(rt), a);
+		build(mid + 1, r[rt], rc(rt), a);
 		pushUp(rt);
 	}
 	
@@ -39,7 +42,7 @@ struct Seg {
 		if (L <= l[rt] && R >= r[rt]) return val[rt];
 		if (L > r[rt] || R < l[rt]) return 0;
 		pushDown(rt);
-		return query(L, R, rt << 1) + query(L, R, rt << 1 | 1);
+		return query(L, R, lc(rt)) + query(L, R, rc(rt));
 	}
 	
 	void update(int L, int R, T x, int rt=1) {
@@ -49,10 +52,10 @@ struct Seg {
 			lazy[rt] += x;
 			return;
 		}
-		int mid = l[rt] + r[rt] >> 1;
+		int mid = (l[rt] + r[rt]) >> 1;
 		pushDown(rt);
-		if (mid >= L) update(L, R, x, rt << 1);
-		if (mid < R) update(L, R, x, rt << 1 | 1);
+		if (mid >= L) update(L, R, x, lc(rt));
+		if (mid < R) update(L, R, x, rc(rt));
 		pushUp(rt);
 	}
 	
@@ -74,15 +77,15 @@ struct Seg {
 
 template<typename T>
 struct Tree {
-	int dfn = 0, n;
+	int dfn = 0;
 	std::vector<std::vector<int>> g;
 	Seg<T> seg;
-	std::vector<int> fath, dep, size, son, top, ipt;
+	std::vector<int> fa, dep, size, son, top, idx;
 	std::vector<T> val, val2;
 	
 	void dfs1(int x, int father) {
 		dep[x] = dep[father] + 1;
-		fath[x] = father;
+		fa[x] = father;
 		for (auto &to : g[x]) {
 			if (to == father) { continue; }
 			dfs1(to, x);
@@ -93,26 +96,25 @@ struct Tree {
 	
 	void dfs2(int x, int topx) {
 		top[x] = topx;
-		ipt[x] = ++dfn;
+		idx[x] = ++dfn;
 		val2[dfn] = val[x];
 		
 		if (son[x] != 0) { dfs2(son[x], topx); } // 重边则延续该链
 		for (auto &to : g[x]) {
-			if (to != fath[x] && to != son[x]) { // 轻边则开启一条新链
+			if (to != fa[x] && to != son[x]) { // 轻边则开启一条新链
 				dfs2(to, to);
 			}
 		}
 	}
 	
 	Tree(int n) {
-		this->n = n;
 		g.resize(n + 1);
-		fath.resize(n + 1);
+		fa.resize(n + 1);
 		dep.resize(n + 1);
 		size.resize(n + 1, 1);
-		son.resize(n + 1, 0);
+		son.resize(n + 1);
 		top.resize(n + 1);
-		ipt.resize(n + 1);
+		idx.resize(n + 1);
 		val.resize(n + 1);
 		val2.resize(n + 1);
 	}
@@ -125,7 +127,7 @@ struct Tree {
 	void init(int rt = 1) {
 		dfs1(rt, 0);
 		dfs2(rt, rt);
-		seg.init(val);
+		seg.init(val2);
 	}
 	
 	int lca(int u, int v) {
@@ -133,7 +135,7 @@ struct Tree {
 			if (dep[top[u]] < dep[top[v]]) {
 				std::swap(u, v);
 			}
-			u = fath[top[u]];
+			u = fa[top[u]];
 		}
 		return dep[u] < dep[v] ? u : v;
 	}
@@ -143,32 +145,32 @@ struct Tree {
 			if (dep[top[u]] < dep[top[v]]) {
 				std::swap(u, v);
 			}
-			seg.update(ipt[top[u]], ipt[u], x);
-			u = fath[top[u]];
+			seg.update(idx[top[u]], idx[u], x);
+			u = fa[top[u]];
 		}
 		if (dep[u] > dep[v]) { std::swap(u, v); }
-		seg.update(ipt[u], ipt[v], x);
+		seg.update(idx[u], idx[v], x);
 	}
 	
 	void updateSubtree(int u, T x) {
-		seg.update(ipt[u], ipt[u] + size[u] - 1, x);
+		seg.update(idx[u], idx[u] + size[u] - 1, x);
 	}
 	
-	T query(int u, int v, T x) {
+	T query(int u, int v) {
 		T ans = 0;
 		while (top[u] != top[v]) {
 			if (dep[top[u]] < dep[top[v]]) {
 				std::swap(u, v);
 			}
-			ans += seg.query(ipt[top[u]], ipt[u]);
-			u = fath[top[u]];
+			ans += seg.query(idx[top[u]], idx[u]);
+			u = fa[top[u]];
 		}
 		if (dep[u] > dep[v]) { std::swap(u, v); }
-		ans += seg.query(ipt[u], ipt[v]);
+		ans += seg.query(idx[u], idx[v]);
 		return ans;
 	}
 	
-	T querySubtree(int u, T x) {
-		return seg.query(ipt[u], ipt[u] + size[u] - 1);
+	T querySubtree(int u) {
+		return seg.query(idx[u], idx[u] + size[u] - 1);
 	}
 };
