@@ -5,18 +5,21 @@ struct Seg {
 	std::vector<T> val, lazy;
 	std::vector<int> l, r;
 	
+	inline int lc(int rt) { return rt << 1; }
+	inline int rc(int rt) { return rt << 1 | 1; }
+	
 	inline void pushUp(int rt) {
-		val[rt] = val[rt << 1] + val[rt << 1 | 1];
+		val[rt] = val[lc(rt)] + val[rc(rt)];
 	}
 	
 	inline void pushDown(int rt) {
-		int llen = r[rt << 1] - l[rt << 1] + 1;
-		int rlen = r[rt << 1 | 1] - l[rt << 1 | 1] + 1;
+		int llen = r[lc(rt)] - l[lc(rt)] + 1;
+		int rlen = r[rc(rt)] - l[rc(rt)] + 1;
 		if (lazy[rt]) {
-			lazy[rt << 1] += lazy[rt];
-			lazy[rt << 1 | 1] += lazy[rt];
-			val[rt << 1] += lazy[rt] * llen;
-			val[rt << 1 | 1] += lazy[rt] * rlen;
+			lazy[lc(rt)] += lazy[rt];
+			lazy[rc(rt)] += lazy[rt];
+			val[lc(rt)] += lazy[rt] * llen;
+			val[rc(rt)] += lazy[rt] * rlen;
 			lazy[rt] = 0;
 		}
 	}
@@ -27,9 +30,9 @@ struct Seg {
 			val[rt] = a[L];
 			return;
 		}
-		int mid = l[rt] + r[rt] >> 1;
-		build(l, mid, rt << 1, a);
-		build(mid + 1, r, rt << 1 | 1, a);
+		int mid = (l[rt] + r[rt]) >> 1;
+		build(l[rt], mid, lc(rt), a);
+		build(mid + 1, r[rt], rc(rt), a);
 		pushUp(rt);
 	}
 	
@@ -37,7 +40,7 @@ struct Seg {
 		if (L <= l[rt] && R >= r[rt]) return val[rt];
 		if (L > r[rt] || R < l[rt]) return 0;
 		pushDown(rt);
-		return query(L, R, rt << 1) + query(L, R, rt << 1 | 1);
+		return query(L, R, lc(rt)) + query(L, R, rc(rt));
 	}
 	
 	void update(int L, int R, T x, int rt=1) {
@@ -47,10 +50,10 @@ struct Seg {
 			lazy[rt] += x;
 			return;
 		}
-		int mid = l[rt] + r[rt] >> 1;
+		int mid = (l[rt] + r[rt]) >> 1;
 		pushDown(rt);
-		if (mid >= L) update(L, R, x, rt << 1);
-		if (mid < R) update(L, R, x, rt << 1 | 1);
+		if (mid >= L) update(L, R, x, lc(rt));
+		if (mid < R) update(L, R, x, rc(rt));
 		pushUp(rt);
 	}
 	

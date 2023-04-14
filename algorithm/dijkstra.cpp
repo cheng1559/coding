@@ -1,56 +1,63 @@
 #include <bits/stdc++.h>
 
-using ll = long long;
-using vi = std::vector<int>;
-using vll = std::vector<ll>;
-using pii = std::pair<int, int>;
+using i64 = long long;
+constexpr int INF = 1e9;
 
-struct node {
-	int id, dis;
-	friend bool operator<(node a, node b) {
-		return a.dis > b.dis;
+template <typename T>
+struct Graph {
+	int n;
+	struct e { int from, to; T val; };
+	struct node {
+		int id;
+		T dis;
+		friend bool operator<(node a, node b) { return a.dis > b.dis; }
+	};
+	
+	std::vector<std::vector<e>> g;
+	
+	void add(int u, int v, T x) {
+		g[u].emplace_back(e{u, v, x});
 	}
+	
+	Graph(int n) {
+		this->n = n;
+		g.resize(n + 1);
+	}
+	
+	int dijkstra(int p, int q) {
+		std::vector<int> vis(n + 1), dis(n + 1, INF);
+		std::priority_queue<node> pq;
+		pq.push({p, 0});
+		dis[p] = 0;
+		while (pq.size()) {
+			node cur = pq.top();
+			pq.pop();
+			if (vis[cur.id]) continue;
+			vis[cur.id] = 1;
+			
+			for (auto &i : g[cur.id]) {
+				if (dis[cur.id] + i.val < dis[i.to]) {
+					dis[i.to] = dis[cur.id] + i.val;
+					pq.push({i.to, dis[i.to]});
+				}
+			}
+		}
+		return dis[q] == INF ? -1 : dis[q];
+	};
 };
-
-struct e {
-	int to, val;
-};
-
-const int INF = (1ll << 31) - 1;
 
 int main() {
 	std::cin.tie(0), std::cout.tie(0);
 	std::ios::sync_with_stdio(false);
 	int n, m;
 	while (std::cin >> n >> m, m || n) {
-		std::vector<e> g[n + 1];
+		Graph<int> g(n + 1);
 		while (m --) {
-			int a, b, x;
-			std::cin >> a >> b >> x;
-			g[a].push_back({b, x});
-			g[b].push_back({a, x});
+			int u, v, x;
+			std::cin >> u >> v >> x;
+			g.add(u, v, x);
+			g.add(v, u, x);
 		}
-		auto dij = [&](int p, int q) {
-			vi vis(n + 1), dis(n + 1, INF);
-			std::priority_queue<node> pq;
-			pq.push({p, 0});
-			dis[p] = 0;
-			
-			while (pq.size()) {
-				node cur = pq.top();
-				pq.pop();
-				if (vis[cur.id]) continue;
-				vis[cur.id] = 1;
-				
-				for (auto i : g[cur.id]) {
-					if (dis[cur.id] + i.val < dis[i.to]) {
-						dis[i.to] = dis[cur.id] + i.val;
-						pq.push({i.to, dis[i.to]});
-					}
-				}
-			}
-			return dis[q] == INF ? -1 : dis[q];
-		};
-		std::cout << dij(1, n) << "\n";
+		std::cout << g.dijkstra(1, n) << "\n";
 	}
 }
