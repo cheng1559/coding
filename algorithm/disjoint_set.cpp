@@ -1,24 +1,21 @@
 #include <bits/stdc++.h>
 
-
-class DSU {
-public:
-	std::vector<int> uset, rank;
-	int find(int x) {
-		if (x != uset[x]) uset[x] = find(uset[x]);
-		return uset[x];
-	}
-	void merge(int x, int y) {
-		if ((x = find(x)) == (y = find(y))) return;
-		if (rank[x] > rank[y]) uset[y] = x;
-		else {
-			uset[x] = y;
-			if (rank[x] == rank[y]) rank[y] ++;
-		}
-	}
-	DSU(int n) {
-		uset.resize(n);
-		rank.resize(n);
-		for (int i = 0; i < n; i ++) uset[i] = i;
-	}
+struct DSU {
+    std::vector<int> f, siz;
+    DSU(int n) : f(n), siz(n, 1) { std::iota(f.begin(), f.end(), 0); }
+    int leader(int x) {
+        while (x != f[x]) x = f[x] = f[f[x]];
+        return x;
+    }
+    bool same(int x, int y) { return leader(x) == leader(y); }
+    bool merge(int x, int y) {
+        x = leader(x);
+        y = leader(y);
+        if (x == y) return false;
+        siz[x] += siz[y];
+        f[y] = x;
+        return true;
+    }
+    int size(int x) { return siz[leader(x)]; }
 };
+ 
